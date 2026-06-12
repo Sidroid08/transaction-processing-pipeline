@@ -1,0 +1,5 @@
+# Normalise line endings to LF so Linux-based Docker builds are unaffected by
+# Windows checkouts.
+* text=auto eol=lf
+*.png binary
+*.csv text eol=lf
