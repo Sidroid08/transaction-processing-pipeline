@@ -13,28 +13,32 @@
           <mxGeometry x="60" y="120" width="140" height="70" as="geometry" />
         </mxCell>
 
-        <mxCell id="api" value="FastAPI (api)&#10;POST /jobs/upload&#10;GET /jobs/{id}/status&#10;GET /jobs/{id}/results&#10;GET /jobs?status=" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;" vertex="1" parent="1">
-          <mxGeometry x="280" y="100" width="220" height="120" as="geometry" />
+        <mxCell id="api" value="FastAPI (api)&#10;POST /jobs/upload&#10;GET /jobs/{id}/status&#10;GET /jobs/{id}/results&#10;GET /jobs?status={status}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="100" width="230" height="125" as="geometry" />
         </mxCell>
 
         <mxCell id="redis" value="Redis&#10;(Celery broker + result backend)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="600" y="60" width="180" height="80" as="geometry" />
+          <mxGeometry x="620" y="60" width="190" height="80" as="geometry" />
         </mxCell>
 
-        <mxCell id="worker" value="Celery Worker&#10;Pipeline:&#10;a) Clean + dedupe&#10;b) Anomaly detection&#10;c) LLM classify (batched)&#10;d) LLM narrative summary&#10;e) Retry w/ backoff" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;" vertex="1" parent="1">
-          <mxGeometry x="600" y="190" width="220" height="160" as="geometry" />
+        <mxCell id="worker" value="Celery Worker&#10;Pipeline:&#10;a) clean + dedupe&#10;b) anomaly detection&#10;c) LLM classify (batched)&#10;d) narrative summary&#10;e) retry with backoff&#10;f) mark failed if needed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="190" width="240" height="180" as="geometry" />
         </mxCell>
 
         <mxCell id="db" value="PostgreSQL&#10;jobs / transactions / job_summaries" style="cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="320" y="320" width="160" height="100" as="geometry" />
+          <mxGeometry x="320" y="330" width="170" height="100" as="geometry" />
         </mxCell>
 
-        <mxCell id="volume" value="Shared Volume&#10;/data/uploads/{job_id}.csv" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" vertex="1" parent="1">
-          <mxGeometry x="320" y="460" width="200" height="60" as="geometry" />
+        <mxCell id="volume" value="Shared Volume&#10;/data/uploads/{job_id}.csv&#10;(local Docker storage)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="480" width="220" height="70" as="geometry" />
         </mxCell>
 
-        <mxCell id="llm" value="LLM Provider&#10;Gemini 1.5 Flash&#10;(auto-fallback to local&#10;deterministic stub)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="900" y="220" width="180" height="100" as="geometry" />
+        <mxCell id="llm" value="LLM Provider&#10;Gemini 1.5 Flash&#10;(fallback: local deterministic stub)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="920" y="230" width="190" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note" value="Important boundary: clients never read PostgreSQL directly.&#10;All reads/writes go through the FastAPI service." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="220" height="70" as="geometry" />
         </mxCell>
 
         <mxCell id="e1" style="endArrow=classic;html=1;" edge="1" parent="1" source="client" target="api">
@@ -54,7 +58,7 @@
         <mxCell id="e3" style="endArrow=classic;html=1;" edge="1" parent="1" source="api" target="db">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e3b" value="3. create Job (pending)" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e3">
+        <mxCell id="e3b" value="3. create job record (pending)" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e3">
           <mxGeometry x="-0.3" relative="1" as="geometry" />
         </mxCell>
 
@@ -68,7 +72,7 @@
         <mxCell id="e5" style="endArrow=classic;html=1;" edge="1" parent="1" source="redis" target="worker">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e5b" value="5. dequeue" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e5">
+        <mxCell id="e5b" value="5. dequeue task" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
@@ -82,26 +86,39 @@
         <mxCell id="e7" style="endArrow=classic;html=1;" edge="1" parent="1" source="worker" target="llm">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e7b" value="7. classify + summarise" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e7">
+        <mxCell id="e7b" value="7. classify + summarize" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e7">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
         <mxCell id="e8" style="endArrow=classic;html=1;" edge="1" parent="1" source="worker" target="db">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e8b" value="8. persist results + summary, mark completed" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e8">
+        <mxCell id="e8b" value="8. persist results + summary; mark completed/failed" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e8">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="e9" style="endArrow=classic;html=1;startArrow=classic;" edge="1" parent="1" source="client" target="db">
+        <mxCell id="e9" style="endArrow=classic;html=1;dashed=1;" edge="1" parent="1" source="client" target="api">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="130" y="370" />
+              <mxPoint x="130" y="255" />
+              <mxPoint x="395" y="255" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="e9b" value="9. poll status / results" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e9">
           <mxGeometry y="10" relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e10" style="endArrow=classic;html=1;dashed=1;" edge="1" parent="1" source="api" target="db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="535" y="270" />
+              <mxPoint x="535" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10b" value="10. read status / results" style="edgeLabel;html=1;" connectable="0" vertex="1" parent="e10">
+          <mxGeometry x="0.2" relative="1" as="geometry" />
         </mxCell>
 
       </root>
